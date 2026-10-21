@@ -8,14 +8,17 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root {
+    /* ---------------- THEME VARIABLES: DARK (Default) ---------------- */
+    :root, [data-theme="dark"] {
       --bg-gradient: linear-gradient(135deg, #0b0f19 0%, #111827 50%, #0d1527 100%);
       --surface: rgba(23, 31, 51, 0.75);
       --surface-solid: #171f33;
       --surface-card: #1e293b;
-      --surface-hover: #26334d;
       --border: rgba(255, 255, 255, 0.08);
       --border-focus: rgba(99, 102, 241, 0.5);
+
+      --header-bg: rgba(15, 23, 42, 0.7);
+      --grid-dot: rgba(255, 255, 255, 0.08);
 
       --primary: #6366f1;
       --primary-glow: rgba(99, 102, 241, 0.35);
@@ -31,18 +34,86 @@
       --text-muted: #94a3b8;
       --text-dim: #64748b;
 
+      --box-bg: #0b0f19;
+      --box-border: rgba(255, 255, 255, 0.08);
+
       /* Node State Colors */
       --node-unvisited: #334155;
       --node-unvisited-stroke: #64748b;
+      --node-unvisited-text: #f8fafc;
+
       --node-queue: #f59e0b;
+      --node-queue-stroke: #fbbf24;
+      --node-queue-text: #0f172a;
       --node-queue-glow: rgba(245, 158, 11, 0.45);
-      --node-current: #f43f5e;
-      --node-current-glow: rgba(244, 63, 94, 0.55);
+
+      --node-current: #ef4444;
+      --node-current-stroke: #fda4af;
+      --node-current-text: #ffffff;
+      --node-current-glow: rgba(239, 68, 68, 0.5);
+
       --node-visited: #10b981;
+      --node-visited-stroke: #6ee7b7;
+      --node-visited-text: #ffffff;
       --node-visited-glow: rgba(16, 185, 129, 0.45);
       
       --edge-default: #334155;
       --edge-active: #38bdf8;
+      --order-color: #34d399;
+    }
+
+    /* ---------------- THEME VARIABLES: LIGHT ---------------- */
+    [data-theme="light"] {
+      --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
+      --surface: rgba(255, 255, 255, 0.85);
+      --surface-solid: #ffffff;
+      --surface-card: #ffffff;
+      --border: rgba(0, 0, 0, 0.08);
+      --border-focus: rgba(79, 70, 229, 0.5);
+
+      --header-bg: rgba(255, 255, 255, 0.8);
+      --grid-dot: rgba(0, 0, 0, 0.06);
+
+      --primary: #4f46e5;
+      --primary-glow: rgba(79, 70, 229, 0.25);
+      --primary-hover: #4338ca;
+      
+      --secondary: #0891b2;
+      --secondary-hover: #0e7490;
+      
+      --reset-btn: #94a3b8;
+      --reset-hover: #64748b;
+
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --text-dim: #94a3b8;
+
+      --box-bg: #f8fafc;
+      --box-border: #cbd5e1;
+
+      /* Node State Colors */
+      --node-unvisited: #e2e8f0;
+      --node-unvisited-stroke: #94a3b8;
+      --node-unvisited-text: #1e293b;
+
+      --node-queue: #fbbf24;
+      --node-queue-stroke: #d97706;
+      --node-queue-text: #78350f;
+      --node-queue-glow: rgba(251, 191, 36, 0.45);
+
+      --node-current: #ef4444;
+      --node-current-stroke: #b91c1c;
+      --node-current-text: #ffffff;
+      --node-current-glow: rgba(239, 68, 68, 0.4);
+
+      --node-visited: #22c55e;
+      --node-visited-stroke: #15803d;
+      --node-visited-text: #ffffff;
+      --node-visited-glow: rgba(34, 197, 94, 0.4);
+      
+      --edge-default: #cbd5e1;
+      --edge-active: #2563eb;
+      --order-color: #0f766e;
     }
 
     * {
@@ -50,6 +121,7 @@
       margin: 0;
       padding: 0;
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
     }
 
     body {
@@ -68,19 +140,19 @@
       width: 450px;
       height: 450px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(0,0,0,0) 70%);
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(0,0,0,0) 70%);
       pointer-events: none;
       z-index: 0;
       filter: blur(40px);
     }
     .glow-1 { top: -100px; left: -100px; }
-    .glow-2 { bottom: -120px; right: -80px; background: radial-gradient(circle, rgba(6, 182, 212, 0.12) 0%, rgba(0,0,0,0) 70%); }
+    .glow-2 { bottom: -120px; right: -80px; background: radial-gradient(circle, rgba(6, 182, 212, 0.1) 0%, rgba(0,0,0,0) 70%); }
 
     /* Header */
     header {
       position: relative;
       z-index: 10;
-      background: rgba(15, 23, 42, 0.7);
+      background: var(--header-bg);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--border);
@@ -100,11 +172,11 @@
       width: 42px;
       height: 42px;
       border-radius: 12px;
-      background: linear-gradient(135deg, #6366f1, #06b6d4);
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+      box-shadow: 0 4px 14px var(--primary-glow);
     }
 
     .brand-icon svg {
@@ -119,15 +191,49 @@
       font-size: 1.45rem;
       font-weight: 800;
       letter-spacing: -0.03em;
-      background: linear-gradient(to right, #ffffff, #cbd5e1);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: var(--text-main);
     }
 
     .brand-titles p {
       color: var(--text-muted);
       font-size: 0.82rem;
       font-weight: 500;
+    }
+
+    /* Theme Toggle Switch */
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .theme-toggle-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      padding: 7px 15px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      color: var(--text-main);
+      font-size: 0.82rem;
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      user-select: none;
+    }
+
+    .theme-toggle-btn:hover {
+      background: var(--surface-hover, rgba(255,255,255,0.1));
+      border-color: var(--primary);
+    }
+
+    .theme-icon {
+      width: 17px;
+      height: 17px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
     /* Main Grid Layout */
@@ -157,7 +263,7 @@
       -webkit-backdrop-filter: blur(20px);
       border: 1px solid var(--border);
       border-radius: 16px;
-      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05);
       position: relative;
       flex: 1;
       display: flex;
@@ -167,12 +273,11 @@
       min-height: 520px;
     }
 
-    /* Subdued grid background on canvas */
     .canvas-card::before {
       content: '';
       position: absolute;
       inset: 0;
-      background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+      background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px);
       background-size: 24px 24px;
       pointer-events: none;
     }
@@ -187,7 +292,7 @@
 
     /* Modern Legend Bar */
     .legend-bar {
-      background: rgba(23, 31, 51, 0.65);
+      background: var(--surface);
       backdrop-filter: blur(12px);
       border: 1px solid var(--border);
       border-radius: 12px;
@@ -220,7 +325,7 @@
       height: 13px;
       border-radius: 50%;
       border: 2px solid transparent;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      box-shadow: 0 0 10px rgba(0,0,0,0.15);
     }
 
     /* Sidebar Panels */
@@ -237,12 +342,11 @@
       border: 1px solid var(--border);
       border-radius: 16px;
       padding: 18px 20px;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-      transition: border-color 0.2s ease;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05);
     }
 
     .glass-card:hover {
-      border-color: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.18);
     }
 
     .card-header {
@@ -251,13 +355,13 @@
       justify-content: space-between;
       margin-bottom: 14px;
       padding-bottom: 8px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      border-bottom: 1px solid var(--border);
     }
 
     .card-header h2 {
       font-size: 0.95rem;
       font-weight: 700;
-      color: #f1f5f9;
+      color: var(--text-main);
       display: flex;
       align-items: center;
       gap: 8px;
@@ -278,10 +382,10 @@
     }
 
     select {
-      background: #0f172a;
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: var(--box-bg);
+      border: 1px solid var(--box-border);
       border-radius: 8px;
-      color: #f8fafc;
+      color: var(--text-main);
       padding: 7px 14px;
       font-size: 0.92rem;
       font-weight: 600;
@@ -339,11 +443,6 @@
       align-items: center;
       justify-content: center;
       gap: 6px;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    button:active {
-      transform: translateY(1px);
     }
 
     button:disabled {
@@ -354,33 +453,32 @@
     }
 
     .btn-run {
-      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
       color: #ffffff;
       box-shadow: 0 4px 14px var(--primary-glow);
     }
     .btn-run:hover:not(:disabled) {
-      background: linear-gradient(135deg, #4f46e5, #4338ca);
-      box-shadow: 0 6px 18px rgba(99, 102, 241, 0.5);
+      box-shadow: 0 6px 18px var(--primary-glow);
+      filter: brightness(1.08);
     }
 
     .btn-step {
-      background: linear-gradient(135deg, #06b6d4, #0891b2);
+      background: linear-gradient(135deg, var(--secondary), var(--secondary-hover));
       color: #ffffff;
       box-shadow: 0 4px 14px rgba(6, 182, 212, 0.3);
     }
     .btn-step:hover:not(:disabled) {
-      background: linear-gradient(135deg, #0891b2, #0e7490);
       box-shadow: 0 6px 18px rgba(6, 182, 212, 0.45);
+      filter: brightness(1.08);
     }
 
     .btn-reset {
-      background: rgba(255, 255, 255, 0.08);
-      color: #e2e8f0;
+      background: var(--reset-btn);
+      color: #ffffff;
       border: 1px solid var(--border);
     }
     .btn-reset:hover:not(:disabled) {
-      background: rgba(255, 255, 255, 0.14);
-      color: #ffffff;
+      background: var(--reset-hover);
     }
 
     /* Live Data Boxes */
@@ -401,14 +499,14 @@
     }
 
     .data-display {
-      background: #0b0f19;
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: var(--box-bg);
+      border: 1px solid var(--box-border);
       border-radius: 8px;
       padding: 10px 14px;
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.9rem;
       font-weight: 600;
-      color: #e2e8f0;
+      color: var(--text-main);
       min-height: 42px;
       display: flex;
       align-items: center;
@@ -416,7 +514,7 @@
     }
 
     .order-glow {
-      color: #34d399;
+      color: var(--order-color);
       border-color: rgba(52, 211, 153, 0.2);
     }
 
@@ -424,8 +522,8 @@
     .step-box {
       font-size: 0.88rem;
       line-height: 1.55;
-      color: #cbd5e1;
-      background: #0b0f19;
+      color: var(--text-muted);
+      background: var(--box-bg);
       border-radius: 8px;
       padding: 12px 14px;
       border-left: 3px solid var(--primary);
@@ -433,7 +531,7 @@
     }
 
     .step-box strong {
-      color: #ffffff;
+      color: var(--text-main);
     }
 
     /* Complexity List */
@@ -447,54 +545,49 @@
     }
 
     .complexity-pill {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: var(--box-bg);
+      border: 1px solid var(--box-border);
       border-radius: 8px;
       padding: 8px 12px;
     }
 
     .complexity-pill strong {
-      color: #f8fafc;
+      color: var(--text-main);
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.85rem;
     }
 
-    /* SVG Graphical Elements & Smooth Animations */
+    /* SVG Graphical Elements - NO MOVEMENT/PULSE ON ACTIVE RED */
     .graph-edge {
       stroke: var(--edge-default);
       stroke-width: 3.5;
       stroke-linecap: round;
-      transition: stroke 0.3s cubic-bezier(0.4, 0, 0.2, 1), stroke-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), filter 0.3s ease;
+      transition: stroke 0.3s ease, stroke-width 0.3s ease, filter 0.3s ease;
     }
 
     .graph-edge.active {
       stroke: var(--edge-active);
       stroke-width: 5;
-      filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.8));
+      filter: drop-shadow(0 0 6px var(--edge-active));
     }
 
     .graph-node circle {
       stroke-width: 3;
-      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: fill 0.3s ease, stroke 0.3s ease;
       cursor: default;
+      /* Static position preserved - no transform or keyframe pulse */
     }
 
     .graph-node.current circle {
-      filter: drop-shadow(0 0 14px rgba(244, 63, 94, 0.85));
-      animation: pulseActive 1.4s infinite ease-in-out;
+      filter: drop-shadow(0 0 10px var(--node-current-glow));
     }
 
     .graph-node.queue circle {
-      filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.75));
+      filter: drop-shadow(0 0 8px var(--node-queue-glow));
     }
 
     .graph-node.visited circle {
-      filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.65));
-    }
-
-    @keyframes pulseActive {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.06); }
+      filter: drop-shadow(0 0 8px var(--node-visited-glow));
     }
 
     .graph-node text {
@@ -518,7 +611,7 @@
     }
   </style>
 </head>
-<body>
+<body data-theme="dark">
 
   <!-- Ambient Glow Effects -->
   <div class="glow-sphere glow-1"></div>
@@ -540,6 +633,14 @@
         <p>Breadth-First Search Graph Traversal Animation</p>
       </div>
     </div>
+
+    <!-- Theme Toggle Switch -->
+    <div class="header-actions">
+      <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle Light / Dark Color Theme">
+        <span id="themeIcon" class="theme-icon">🌙</span>
+        <span id="themeText">Dark Mode</span>
+      </button>
+    </div>
   </header>
 
   <!-- Main Container -->
@@ -555,19 +656,19 @@
       <div class="legend-bar">
         <span class="legend-title">Legend</span>
         <div class="legend-item">
-          <span class="legend-dot" style="background: var(--node-unvisited); border-color: var(--node-unvisited-stroke);"></span>
+          <span id="legDotUnvisited" class="legend-dot" style="background: var(--node-unvisited); border-color: var(--node-unvisited-stroke);"></span>
           <span>Unvisited</span>
         </div>
         <div class="legend-item">
-          <span class="legend-dot" style="background: var(--node-queue); border-color: #b45309;"></span>
+          <span id="legDotQueue" class="legend-dot" style="background: var(--node-queue); border-color: var(--node-queue-stroke);"></span>
           <span>In Queue (Discovered)</span>
         </div>
         <div class="legend-item">
-          <span class="legend-dot" style="background: var(--node-current); border-color: #991b1b;"></span>
+          <span id="legDotCurrent" class="legend-dot" style="background: var(--node-current); border-color: var(--node-current-stroke);"></span>
           <span>Active (Processing)</span>
         </div>
         <div class="legend-item">
-          <span class="legend-dot" style="background: var(--node-visited); border-color: #166534;"></span>
+          <span id="legDotVisited" class="legend-dot" style="background: var(--node-visited); border-color: var(--node-visited-stroke);"></span>
           <span>Fully Visited</span>
         </div>
       </div>
@@ -700,13 +801,23 @@
 
     const nodeRadius = 26;
 
-    // Theme Colors
-    const COLORS = {
-      UNVISITED: { fill: "#334155", stroke: "#64748b", text: "#f8fafc" },
-      QUEUE:     { fill: "#f59e0b", stroke: "#fbbf24", text: "#0f172a" },
-      CURRENT:   { fill: "#f43f5e", stroke: "#fda4af", text: "#ffffff" },
-      VISITED:   { fill: "#10b981", stroke: "#6ee7b7", text: "#ffffff" }
+    // Color palettes by theme
+    const THEME_COLORS = {
+      dark: {
+        UNVISITED: { fill: "#334155", stroke: "#64748b", text: "#f8fafc" },
+        QUEUE:     { fill: "#f59e0b", stroke: "#fbbf24", text: "#0f172a" },
+        CURRENT:   { fill: "#ef4444", stroke: "#fda4af", text: "#ffffff" },
+        VISITED:   { fill: "#10b981", stroke: "#6ee7b7", text: "#ffffff" }
+      },
+      light: {
+        UNVISITED: { fill: "#e2e8f0", stroke: "#94a3b8", text: "#1e293b" },
+        QUEUE:     { fill: "#fbbf24", stroke: "#d97706", text: "#78350f" },
+        CURRENT:   { fill: "#ef4444", stroke: "#b91c1c", text: "#ffffff" },
+        VISITED:   { fill: "#22c55e", stroke: "#15803d", text: "#ffffff" }
+      }
     };
+
+    let currentTheme = "dark";
 
     // State Variables
     let queue = [];
@@ -717,8 +828,22 @@
     let animTimer = null;
     let animSpeedMs = 900;
 
+    // Track state of each node ("UNVISITED", "QUEUE", "CURRENT", "VISITED")
+    const nodeStateMap = {};
+    for (const n of Object.keys(adjList)) {
+      nodeStateMap[n] = "UNVISITED";
+    }
+
+    // Active edges set
+    const activeEdges = new Set();
+
     // DOM Elements
+    const body = document.body;
     const svg = document.getElementById("graphSvg");
+    const themeToggleBtn = document.getElementById("themeToggleBtn");
+    const themeIcon = document.getElementById("themeIcon");
+    const themeText = document.getElementById("themeText");
+
     const startNodeSelect = document.getElementById("startNodeSelect");
     const speedRange = document.getElementById("speedRange");
     const speedValue = document.getElementById("speedValue");
@@ -740,6 +865,8 @@
     function drawGraph() {
       svg.innerHTML = "";
       
+      const palette = THEME_COLORS[currentTheme];
+
       // 1. Draw Edges
       const drawnEdges = new Set();
       for (const u of Object.keys(adjList)) {
@@ -755,7 +882,7 @@
             line.setAttribute("y1", p1.y);
             line.setAttribute("x2", p2.x);
             line.setAttribute("y2", p2.y);
-            line.setAttribute("class", "graph-edge");
+            line.setAttribute("class", "graph-edge" + (activeEdges.has(key) ? " active" : ""));
             svg.appendChild(line);
 
             edgeSvgMap[key] = line;
@@ -765,21 +892,23 @@
 
       // 2. Draw Nodes
       for (const [node, pos] of Object.entries(nodePositions)) {
+        const stateKey = nodeStateMap[node] || "UNVISITED";
+        const style = palette[stateKey];
+
         const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        group.setAttribute("class", "graph-node");
-        group.style.transformOrigin = `${pos.x}px ${pos.y}px`;
+        group.setAttribute("class", "graph-node " + stateKey.toLowerCase());
 
         const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         circle.setAttribute("cx", pos.x);
         circle.setAttribute("cy", pos.y);
         circle.setAttribute("r", nodeRadius);
-        circle.setAttribute("fill", COLORS.UNVISITED.fill);
-        circle.setAttribute("stroke", COLORS.UNVISITED.stroke);
+        circle.setAttribute("fill", style.fill);
+        circle.setAttribute("stroke", style.stroke);
 
         const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
         text.setAttribute("x", pos.x);
         text.setAttribute("y", pos.y);
-        text.setAttribute("fill", COLORS.UNVISITED.text);
+        text.setAttribute("fill", style.text);
         text.textContent = node;
 
         group.appendChild(circle);
@@ -791,10 +920,11 @@
     }
 
     function setNodeState(node, stateKey) {
+      nodeStateMap[node] = stateKey;
       const nodeEl = nodeSvgMap[node];
       if (!nodeEl) return;
 
-      const style = COLORS[stateKey];
+      const style = THEME_COLORS[currentTheme][stateKey];
       nodeEl.circle.setAttribute("fill", style.fill);
       nodeEl.circle.setAttribute("stroke", style.stroke);
       nodeEl.text.setAttribute("fill", style.text);
@@ -806,7 +936,14 @@
     }
 
     function highlightEdge(u, v, active = true) {
-      const line = edgeSvgMap[edgeKey(u, v)];
+      const key = edgeKey(u, v);
+      if (active) {
+        activeEdges.add(key);
+      } else {
+        activeEdges.delete(key);
+      }
+
+      const line = edgeSvgMap[key];
       if (line) {
         if (active) {
           line.classList.add("active");
@@ -814,6 +951,37 @@
           line.classList.remove("active");
         }
       }
+    }
+
+    // Refresh all visual node & edge colors when theme is converted
+    function applyTheme(theme) {
+      currentTheme = theme;
+      body.setAttribute("data-theme", theme);
+
+      if (theme === "dark") {
+        themeIcon.textContent = "🌙";
+        themeText.textContent = "Dark Mode";
+      } else {
+        themeIcon.textContent = "☀️";
+        themeText.textContent = "Light Mode";
+      }
+
+      // Re-apply styles on existing SVG nodes
+      const palette = THEME_COLORS[theme];
+      for (const [node, stateKey] of Object.entries(nodeStateMap)) {
+        const nodeEl = nodeSvgMap[node];
+        if (nodeEl) {
+          const style = palette[stateKey];
+          nodeEl.circle.setAttribute("fill", style.fill);
+          nodeEl.circle.setAttribute("stroke", style.stroke);
+          nodeEl.text.setAttribute("fill", style.text);
+        }
+      }
+    }
+
+    function toggleTheme() {
+      const nextTheme = (currentTheme === "dark") ? "light" : "dark";
+      applyTheme(nextTheme);
     }
 
     function updateDisplays() {
@@ -945,8 +1113,13 @@
       stopAnimation();
       queue = [];
       visitedSet.clear();
-      traversalOrder = [];
+      traversalOrder.clear?.() || (traversalOrder = []);
       stepGenerator = null;
+      activeEdges.clear();
+
+      for (const n of Object.keys(adjList)) {
+        nodeStateMap[n] = "UNVISITED";
+      }
 
       startNodeSelect.disabled = false;
       btnRun.textContent = "▶ Run BFS";
@@ -961,6 +1134,7 @@
     }
 
     // Event Listeners
+    themeToggleBtn.addEventListener("click", toggleTheme);
     btnRun.addEventListener("click", runBFS);
     btnStep.addEventListener("click", stepBFS);
     btnReset.addEventListener("click", resetGraph);
