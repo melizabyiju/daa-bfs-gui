@@ -3,346 +3,504 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BFS Visualizer — DAA Interactive GUI</title>
+  <title>BFS Visualizer — Breadth-First Search Interactive GUI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-color: #f1f5f9;
-      --card-bg: #ffffff;
-      --header-bg: #0f172a;
-      --primary: #2563eb;
-      --primary-hover: #1d4ed8;
-      --secondary: #0d9488;
-      --secondary-hover: #0f766e;
-      --reset-btn: #64748b;
-      --reset-hover: #475569;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
-      --border-color: #e2e8f0;
+      --bg-gradient: linear-gradient(135deg, #0b0f19 0%, #111827 50%, #0d1527 100%);
+      --surface: rgba(23, 31, 51, 0.75);
+      --surface-solid: #171f33;
+      --surface-card: #1e293b;
+      --surface-hover: #26334d;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(99, 102, 241, 0.5);
+
+      --primary: #6366f1;
+      --primary-glow: rgba(99, 102, 241, 0.35);
+      --primary-hover: #4f46e5;
       
-      /* Graph node states matching DAA specification */
-      --node-unvisited: #e2e8f0;
-      --node-unvisited-border: #94a3b8;
-      --node-queue: #fbbf24;
-      --node-queue-border: #b45309;
-      --node-current: #ef4444;
-      --node-current-border: #991b1b;
-      --node-visited: #22c55e;
-      --node-visited-border: #166534;
-      --edge-default: #94a3b8;
-      --edge-active: #2563eb;
+      --secondary: #06b6d4;
+      --secondary-hover: #0891b2;
+      
+      --reset-btn: #475569;
+      --reset-hover: #334155;
+
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+
+      /* Node State Colors */
+      --node-unvisited: #334155;
+      --node-unvisited-stroke: #64748b;
+      --node-queue: #f59e0b;
+      --node-queue-glow: rgba(245, 158, 11, 0.45);
+      --node-current: #f43f5e;
+      --node-current-glow: rgba(244, 63, 94, 0.55);
+      --node-visited: #10b981;
+      --node-visited-glow: rgba(16, 185, 129, 0.45);
+      
+      --edge-default: #334155;
+      --edge-active: #38bdf8;
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
     body {
-      background-color: var(--bg-color);
+      background: var(--bg-gradient);
+      background-attachment: fixed;
       color: var(--text-main);
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      min-height: 100vh;
+      overflow-x: hidden;
     }
 
+    /* Ambient glow elements */
+    .glow-sphere {
+      position: fixed;
+      width: 450px;
+      height: 450px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(0,0,0,0) 70%);
+      pointer-events: none;
+      z-index: 0;
+      filter: blur(40px);
+    }
+    .glow-1 { top: -100px; left: -100px; }
+    .glow-2 { bottom: -120px; right: -80px; background: radial-gradient(circle, rgba(6, 182, 212, 0.12) 0%, rgba(0,0,0,0) 70%); }
+
+    /* Header */
     header {
-      background-color: var(--header-bg);
-      color: #ffffff;
-      padding: 16px 28px;
+      position: relative;
+      z-index: 10;
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 36px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
 
-    .header-title-box h1 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      letter-spacing: -0.025em;
-    }
-
-    .header-title-box p {
-      color: #94a3b8;
-      font-size: 0.875rem;
-      margin-top: 3px;
-    }
-
-    .header-badge {
-      background: #1e293b;
-      border: 1px solid #334155;
-      color: #38bdf8;
-      padding: 6px 12px;
-      border-radius: 9999px;
-      font-size: 0.8rem;
-      font-weight: 600;
-    }
-
-    .main-container {
+    .brand-group {
       display: flex;
-      flex: 1;
-      gap: 18px;
-      padding: 18px 24px;
-      max-width: 1440px;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #6366f1, #06b6d4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+    }
+
+    .brand-icon svg {
+      width: 22px;
+      height: 22px;
+      fill: none;
+      stroke: #ffffff;
+      stroke-width: 2.2;
+    }
+
+    .brand-titles h1 {
+      font-size: 1.45rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(to right, #ffffff, #cbd5e1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-titles p {
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      font-weight: 500;
+    }
+
+    /* Main Grid Layout */
+    .app-layout {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 410px;
+      gap: 22px;
+      padding: 22px 32px 32px;
+      max-width: 1520px;
       margin: 0 auto;
       width: 100%;
+      flex: 1;
     }
 
-    /* Left Section: Graph Canvas + Legend */
-    .graph-pane {
-      flex: 1 1 60%;
+    /* Canvas Section */
+    .canvas-section {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 14px;
     }
 
     .canvas-card {
-      background: var(--card-bg);
-      border-radius: 10px;
-      border: 1px solid var(--border-color);
-      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
       position: relative;
       flex: 1;
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      min-height: 480px;
+      min-height: 520px;
+    }
+
+    /* Subdued grid background on canvas */
+    .canvas-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+      background-size: 24px 24px;
+      pointer-events: none;
     }
 
     svg#graphSvg {
+      position: relative;
+      z-index: 2;
       width: 100%;
       height: 100%;
-      min-height: 480px;
+      min-height: 520px;
     }
 
+    /* Modern Legend Bar */
     .legend-bar {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 10px 18px;
+      background: rgba(23, 31, 51, 0.65);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 22px;
       display: flex;
       align-items: center;
       flex-wrap: wrap;
-      gap: 16px;
-      font-size: 0.85rem;
+      gap: 22px;
+      font-size: 0.84rem;
     }
 
     .legend-title {
-      font-weight: 600;
-      color: #334155;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-size: 0.74rem;
     }
 
     .legend-item {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
+      color: var(--text-muted);
+      font-weight: 500;
     }
 
     .legend-dot {
-      width: 14px;
-      height: 14px;
+      width: 13px;
+      height: 13px;
       border-radius: 50%;
-      border: 1.5px solid transparent;
+      border: 2px solid transparent;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
     }
 
-    /* Right Section: Controls & Live State */
-    .controls-pane {
-      flex: 0 0 390px;
+    /* Sidebar Panels */
+    .sidebar-section {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 16px;
     }
 
-    .panel-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      padding: 16px;
-      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+    .glass-card {
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px 20px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      transition: border-color 0.2s ease;
     }
 
-    .panel-card h2 {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: #1e293b;
-      margin-bottom: 12px;
-      border-bottom: 1px solid var(--border-color);
-      padding-bottom: 6px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+    .glass-card:hover {
+      border-color: rgba(255, 255, 255, 0.12);
     }
 
-    .control-row {
+    .card-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 12px;
-      font-size: 0.9rem;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     }
 
-    .control-row label {
+    .card-header h2 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      letter-spacing: -0.01em;
+    }
+
+    .ctrl-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      font-size: 0.88rem;
+    }
+
+    .ctrl-row label {
       font-weight: 600;
-      color: #334155;
+      color: var(--text-muted);
     }
 
     select {
-      padding: 6px 12px;
-      font-size: 0.9rem;
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      color: #f8fafc;
+      padding: 7px 14px;
+      font-size: 0.92rem;
       font-weight: 600;
-      border: 1px solid #cbd5e1;
-      border-radius: 6px;
-      background: #ffffff;
-      outline: none;
       cursor: pointer;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
 
-    .speed-slider-box {
+    select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+
+    .slider-box {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
 
     input[type=range] {
+      width: 130px;
       accent-color: var(--primary);
       cursor: pointer;
     }
 
-    .btn-group {
+    .speed-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--secondary);
+      background: rgba(6, 182, 212, 0.12);
+      border: 1px solid rgba(6, 182, 212, 0.25);
+      border-radius: 6px;
+      padding: 3px 8px;
+      min-width: 58px;
+      text-align: center;
+    }
+
+    /* Buttons */
+    .button-bar {
       display: grid;
-      grid-template-columns: 1.3fr 1.3fr 1fr;
+      grid-template-columns: 1.25fr 1.25fr 0.9fr;
       gap: 8px;
       margin-top: 6px;
     }
 
     button {
-      padding: 9px 12px;
+      padding: 10px 12px;
       font-size: 0.88rem;
-      font-weight: 600;
+      font-weight: 700;
       border: none;
-      border-radius: 6px;
+      border-radius: 10px;
       cursor: pointer;
-      transition: background-color 0.15s ease, transform 0.05s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     button:active {
-      transform: scale(0.98);
+      transform: translateY(1px);
     }
 
     button:disabled {
-      opacity: 0.5;
+      opacity: 0.45;
       cursor: not-allowed;
-      transform: none;
+      transform: none !important;
+      box-shadow: none !important;
     }
 
     .btn-run {
-      background: var(--primary);
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
       color: #ffffff;
+      box-shadow: 0 4px 14px var(--primary-glow);
     }
     .btn-run:hover:not(:disabled) {
-      background: var(--primary-hover);
+      background: linear-gradient(135deg, #4f46e5, #4338ca);
+      box-shadow: 0 6px 18px rgba(99, 102, 241, 0.5);
     }
 
     .btn-step {
-      background: var(--secondary);
+      background: linear-gradient(135deg, #06b6d4, #0891b2);
       color: #ffffff;
+      box-shadow: 0 4px 14px rgba(6, 182, 212, 0.3);
     }
     .btn-step:hover:not(:disabled) {
-      background: var(--secondary-hover);
+      background: linear-gradient(135deg, #0891b2, #0e7490);
+      box-shadow: 0 6px 18px rgba(6, 182, 212, 0.45);
     }
 
     .btn-reset {
-      background: var(--reset-btn);
-      color: #ffffff;
+      background: rgba(255, 255, 255, 0.08);
+      color: #e2e8f0;
+      border: 1px solid var(--border);
     }
     .btn-reset:hover:not(:disabled) {
-      background: var(--reset-hover);
+      background: rgba(255, 255, 255, 0.14);
+      color: #ffffff;
     }
 
-    .state-field {
+    /* Live Data Boxes */
+    .data-group {
       margin-bottom: 12px;
     }
-
-    .state-field:last-child {
+    .data-group:last-child {
       margin-bottom: 0;
     }
 
-    .state-label {
-      font-size: 0.8rem;
+    .data-label {
+      font-size: 0.72rem;
       font-weight: 700;
-      color: #475569;
+      color: var(--text-dim);
       text-transform: uppercase;
-      letter-spacing: 0.04em;
-      margin-bottom: 4px;
+      letter-spacing: 0.06em;
+      margin-bottom: 5px;
     }
 
-    .state-box {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      padding: 8px 12px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 0.95rem;
+    .data-display {
+      background: #0b0f19;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
       font-weight: 600;
-      color: #0f172a;
-      min-height: 38px;
+      color: #e2e8f0;
+      min-height: 42px;
       display: flex;
       align-items: center;
       word-break: break-all;
     }
 
-    .order-box {
-      color: #0f766e;
+    .order-glow {
+      color: #34d399;
+      border-color: rgba(52, 211, 153, 0.2);
     }
 
-    .explanation-text {
-      font-size: 0.875rem;
-      line-height: 1.45;
-      color: #334155;
-      background: #f8fafc;
-      border-radius: 6px;
-      padding: 10px 12px;
+    /* Step Explanation */
+    .step-box {
+      font-size: 0.88rem;
+      line-height: 1.55;
+      color: #cbd5e1;
+      background: #0b0f19;
+      border-radius: 8px;
+      padding: 12px 14px;
       border-left: 3px solid var(--primary);
-      min-height: 75px;
+      min-height: 80px;
     }
 
-    .complexity-list {
-      list-style: none;
-      font-size: 0.83rem;
-      color: #334155;
-      line-height: 1.5;
+    .step-box strong {
+      color: #ffffff;
     }
 
-    .complexity-list li {
-      margin-bottom: 6px;
+    /* Complexity List */
+    .complexity-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.45;
     }
 
-    .complexity-list strong {
-      color: #0f172a;
+    .complexity-pill {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 8px;
+      padding: 8px 12px;
     }
 
-    /* SVG Graph Elements Styling */
+    .complexity-pill strong {
+      color: #f8fafc;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+    }
+
+    /* SVG Graphical Elements & Smooth Animations */
     .graph-edge {
       stroke: var(--edge-default);
-      stroke-width: 3;
-      transition: stroke 0.25s ease, stroke-width 0.25s ease;
+      stroke-width: 3.5;
+      stroke-linecap: round;
+      transition: stroke 0.3s cubic-bezier(0.4, 0, 0.2, 1), stroke-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), filter 0.3s ease;
     }
 
     .graph-edge.active {
       stroke: var(--edge-active);
-      stroke-width: 4.5;
+      stroke-width: 5;
+      filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.8));
     }
 
     .graph-node circle {
-      stroke-width: 2.5;
-      transition: fill 0.3s ease, stroke 0.3s ease;
+      stroke-width: 3;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: default;
+    }
+
+    .graph-node.current circle {
+      filter: drop-shadow(0 0 14px rgba(244, 63, 94, 0.85));
+      animation: pulseActive 1.4s infinite ease-in-out;
+    }
+
+    .graph-node.queue circle {
+      filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.75));
+    }
+
+    .graph-node.visited circle {
+      filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.65));
+    }
+
+    @keyframes pulseActive {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.06); }
     }
 
     .graph-node text {
+      font-family: 'Plus Jakarta Sans', sans-serif;
       font-size: 16px;
-      font-weight: 700;
+      font-weight: 800;
       text-anchor: middle;
       dominant-baseline: central;
       pointer-events: none;
@@ -350,12 +508,11 @@
       transition: fill 0.3s ease;
     }
 
-    @media (max-width: 960px) {
-      .main-container {
-        flex-direction: column;
+    @media (max-width: 1080px) {
+      .app-layout {
+        grid-template-columns: 1fr;
       }
-      .controls-pane {
-        flex: 1 1 auto;
+      .sidebar-section {
         width: 100%;
       }
     }
@@ -363,57 +520,73 @@
 </head>
 <body>
 
-  <!-- Top Header -->
+  <!-- Ambient Glow Effects -->
+  <div class="glow-sphere glow-1"></div>
+  <div class="glow-sphere glow-2"></div>
+
+  <!-- Header -->
   <header>
-    <div class="header-title-box">
-      <h1>BFS Visualizer</h1>
-      <p>Breadth-First Search Graph Traversal Animation — DAA Assignment</p>
-    </div>
-    <div class="header-badge">
-      B.Tech CSE — Module 2
+    <div class="brand-group">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24">
+          <circle cx="6" cy="6" r="3"></circle>
+          <circle cx="18" cy="6" r="3"></circle>
+          <circle cx="12" cy="18" r="3"></circle>
+          <path d="M6 9l4.5 6M18 9l-4.5 6M9 6h6"></path>
+        </svg>
+      </div>
+      <div class="brand-titles">
+        <h1>BFS Visualizer</h1>
+        <p>Breadth-First Search Graph Traversal Animation</p>
+      </div>
     </div>
   </header>
 
-  <!-- Main Body Content -->
-  <main class="main-container">
+  <!-- Main Container -->
+  <main class="app-layout">
     
-    <!-- Left Section: Interactive Graph Canvas -->
-    <section class="graph-pane">
+    <!-- Left: Canvas + Legend -->
+    <section class="canvas-section">
       <div class="canvas-card">
         <svg id="graphSvg" viewBox="0 0 760 480" preserveAspectRatio="xMidYMid meet"></svg>
       </div>
 
-      <!-- Color Legend -->
+      <!-- Color State Legend -->
       <div class="legend-bar">
-        <span class="legend-title">Color Legend:</span>
+        <span class="legend-title">Legend</span>
         <div class="legend-item">
-          <span class="legend-dot" style="background: var(--node-unvisited); border-color: var(--node-unvisited-border);"></span>
+          <span class="legend-dot" style="background: var(--node-unvisited); border-color: var(--node-unvisited-stroke);"></span>
           <span>Unvisited</span>
         </div>
         <div class="legend-item">
-          <span class="legend-dot" style="background: var(--node-queue); border-color: var(--node-queue-border);"></span>
+          <span class="legend-dot" style="background: var(--node-queue); border-color: #b45309;"></span>
           <span>In Queue (Discovered)</span>
         </div>
         <div class="legend-item">
-          <span class="legend-dot" style="background: var(--node-current); border-color: var(--node-current-border);"></span>
-          <span>Current Active (Dequeued)</span>
+          <span class="legend-dot" style="background: var(--node-current); border-color: #991b1b;"></span>
+          <span>Active (Processing)</span>
         </div>
         <div class="legend-item">
-          <span class="legend-dot" style="background: var(--node-visited); border-color: var(--node-visited-border);"></span>
+          <span class="legend-dot" style="background: var(--node-visited); border-color: #166534;"></span>
           <span>Fully Visited</span>
         </div>
       </div>
     </section>
 
-    <!-- Right Section: Controls & Live Algorithm State -->
-    <aside class="controls-pane">
-      
+    <!-- Right: Controls & Info -->
+    <aside class="sidebar-section">
+
       <!-- Card 1: Controls -->
-      <div class="panel-card">
-        <h2>🎮 Traversal Controls</h2>
-        
-        <div class="control-row">
-          <label for="startNodeSelect">Starting Node:</label>
+      <div class="glass-card">
+        <div class="card-header">
+          <h2>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            Traversal Controls
+          </h2>
+        </div>
+
+        <div class="ctrl-row">
+          <label for="startNodeSelect">Start Node:</label>
           <select id="startNodeSelect">
             <option value="A" selected>A</option>
             <option value="B">B</option>
@@ -426,15 +599,15 @@
           </select>
         </div>
 
-        <div class="control-row">
-          <label for="speedRange">Speed:</label>
-          <div class="speed-slider-box">
+        <div class="ctrl-row">
+          <label for="speedRange">Animation Speed:</label>
+          <div class="slider-box">
             <input type="range" id="speedRange" min="300" max="2000" step="100" value="900">
-            <span id="speedValue" style="font-size: 0.85rem; color: #475569; min-width: 46px;">900ms</span>
+            <span id="speedValue" class="speed-badge">900ms</span>
           </div>
         </div>
 
-        <div class="btn-group">
+        <div class="button-bar">
           <button id="btnRun" class="btn-run">▶ Run BFS</button>
           <button id="btnStep" class="btn-step">⏭ Next Step</button>
           <button id="btnReset" class="btn-reset">↺ Reset</button>
@@ -442,39 +615,56 @@
       </div>
 
       <!-- Card 2: Live Algorithm Monitor -->
-      <div class="panel-card">
-        <h2>📊 Live Algorithm State</h2>
-        
-        <div class="state-field">
-          <div class="state-label">Current Queue [FIFO]:</div>
-          <div id="queueDisplay" class="state-box">[ Empty ]</div>
+      <div class="glass-card">
+        <div class="card-header">
+          <h2>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+            Algorithm State Monitor
+          </h2>
         </div>
 
-        <div class="state-field">
-          <div class="state-label">Traversal Order:</div>
-          <div id="orderDisplay" class="state-box order-box">(None)</div>
+        <div class="data-group">
+          <div class="data-label">Current FIFO Queue</div>
+          <div id="queueDisplay" class="data-display">[ Empty ]</div>
+        </div>
+
+        <div class="data-group">
+          <div class="data-label">Traversal Output Sequence</div>
+          <div id="orderDisplay" class="data-display order-glow">(None)</div>
         </div>
       </div>
 
       <!-- Card 3: Step Explanation -->
-      <div class="panel-card" style="flex: 1;">
-        <h2>📝 Step Explanation</h2>
-        <div id="stepExplanation" class="explanation-text">
-          Ready. Select a starting node and click <strong>'Run BFS'</strong> for automatic animation or <strong>'Next Step'</strong> to advance step-by-step.
+      <div class="glass-card" style="flex: 1;">
+        <div class="card-header">
+          <h2>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            Step Explanation
+          </h2>
+        </div>
+        <div id="stepExplanation" class="step-box">
+          Ready. Pick a starting node and click <strong>'Run BFS'</strong> for automatic animation or <strong>'Next Step'</strong> to advance step-by-step.
         </div>
       </div>
 
-      <!-- Card 4: Complexity Analysis -->
-      <div class="panel-card">
-        <h2>⚡ Complexity Analysis</h2>
-        <ul class="complexity-list">
-          <li><strong>• Time Complexity: O(V + E)</strong><br>
-            Every vertex is queued and dequeued once O(V), and each adjacency edge is inspected once O(E).
-          </li>
-          <li><strong>• Space Complexity: O(V)</strong><br>
-            FIFO queue and visited flags store up to V vertices in memory.
-          </li>
-        </ul>
+      <!-- Card 4: Complexity -->
+      <div class="glass-card">
+        <div class="card-header">
+          <h2>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="8" y1="2" x2="8" y2="6"></line><line x1="16" y1="2" x2="16" y2="6"></line></svg>
+            Complexity Analysis
+          </h2>
+        </div>
+        <div class="complexity-grid">
+          <div class="complexity-pill">
+            <strong>Time Complexity: O(V + E)</strong><br>
+            Each node is enqueued once O(V), and each adjacency edge is traversed once O(E).
+          </div>
+          <div class="complexity-pill">
+            <strong>Space Complexity: O(V)</strong><br>
+            Queue & visited flags store up to V nodes in memory.
+          </div>
+        </div>
       </div>
 
     </aside>
@@ -496,7 +686,7 @@
       'H': ['E']
     };
 
-    // Node Positions on Canvas SVG (x, y)
+    // Node Positions on Canvas (x, y)
     const nodePositions = {
       'A': { x: 380, y: 70 },
       'B': { x: 230, y: 175 },
@@ -512,10 +702,10 @@
 
     // Theme Colors
     const COLORS = {
-      UNVISITED: { fill: "#E2E8F0", stroke: "#94A3B8", text: "#0F172A" },
-      QUEUE:     { fill: "#FBBF24", stroke: "#B45309", text: "#78350F" },
-      CURRENT:   { fill: "#EF4444", stroke: "#991B1B", text: "#FFFFFF" },
-      VISITED:   { fill: "#22C55E", stroke: "#166534", text: "#FFFFFF" }
+      UNVISITED: { fill: "#334155", stroke: "#64748b", text: "#f8fafc" },
+      QUEUE:     { fill: "#f59e0b", stroke: "#fbbf24", text: "#0f172a" },
+      CURRENT:   { fill: "#f43f5e", stroke: "#fda4af", text: "#ffffff" },
+      VISITED:   { fill: "#10b981", stroke: "#6ee7b7", text: "#ffffff" }
     };
 
     // State Variables
@@ -539,7 +729,6 @@
     const orderDisplay = document.getElementById("orderDisplay");
     const stepExplanation = document.getElementById("stepExplanation");
 
-    // Map of SVG elements
     const edgeSvgMap = {};
     const nodeSvgMap = {};
 
@@ -547,12 +736,10 @@
       return [u, v].sort().join("-");
     }
 
-    // Initialize SVG Graph Rendering
+    // Render Canvas Graph
     function drawGraph() {
       svg.innerHTML = "";
-      edgeSvgMap.clear?.();
-      nodeSvgMap.clear?.();
-
+      
       // 1. Draw Edges
       const drawnEdges = new Set();
       for (const u of Object.keys(adjList)) {
@@ -576,10 +763,11 @@
         }
       }
 
-      // 2. Draw Nodes (Circle + Text)
+      // 2. Draw Nodes
       for (const [node, pos] of Object.entries(nodePositions)) {
         const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
         group.setAttribute("class", "graph-node");
+        group.style.transformOrigin = `${pos.x}px ${pos.y}px`;
 
         const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         circle.setAttribute("cx", pos.x);
@@ -602,13 +790,19 @@
       }
     }
 
-    function setNodeStyle(node, style) {
+    function setNodeState(node, stateKey) {
       const nodeEl = nodeSvgMap[node];
-      if (nodeEl) {
-        nodeEl.circle.setAttribute("fill", style.fill);
-        nodeEl.circle.setAttribute("stroke", style.stroke);
-        nodeEl.text.setAttribute("fill", style.text);
-      }
+      if (!nodeEl) return;
+
+      const style = COLORS[stateKey];
+      nodeEl.circle.setAttribute("fill", style.fill);
+      nodeEl.circle.setAttribute("stroke", style.stroke);
+      nodeEl.text.setAttribute("fill", style.text);
+
+      nodeEl.group.classList.remove("current", "queue", "visited");
+      if (stateKey === "CURRENT") nodeEl.group.classList.add("current");
+      if (stateKey === "QUEUE") nodeEl.group.classList.add("queue");
+      if (stateKey === "VISITED") nodeEl.group.classList.add("visited");
     }
 
     function highlightEdge(u, v, active = true) {
@@ -645,19 +839,19 @@
       // Step 1: Initialize start node
       visitedSet.add(startNode);
       queue.push(startNode);
-      setNodeStyle(startNode, COLORS.QUEUE);
+      setNodeState(startNode, "QUEUE");
       updateDisplays();
 
-      yield `<strong>Step 1:</strong> Enqueue start node <strong>'${startNode}'</strong> and set its visited flag = 1.<br>Queue now contains: [${startNode}].`;
+      yield `<strong>Step 1:</strong> Enqueue start node <strong>'${startNode}'</strong> and set visited flag = 1.<br>Queue now contains: <code>[${startNode}]</code>.`;
 
       // Step 2: Main BFS Queue processing loop
       while (queue.length > 0) {
         const current = queue.shift();
         traversalOrder.push(current);
-        setNodeStyle(current, COLORS.CURRENT);
+        setNodeState(current, "CURRENT");
         updateDisplays();
 
-        yield `<strong>Processing Node '${current}':</strong> Dequeued from front of queue.<br>Added '${current}' to traversal output order.<br>Checking adjacent vertices: <code>[${adjList[current].join(", ")}]</code>.`;
+        yield `<strong>Processing Node '${current}':</strong> Dequeued from front.<br>Added '${current}' to traversal output order.<br>Checking adjacent vertices: <code>[${adjList[current].join(", ")}]</code>.`;
 
         const neighbors = adjList[current] || [];
         let discoveredAny = false;
@@ -668,10 +862,10 @@
             visitedSet.add(neighbor);
             queue.push(neighbor);
             highlightEdge(current, neighbor, true);
-            setNodeStyle(neighbor, COLORS.QUEUE);
+            setNodeState(neighbor, "QUEUE");
             updateDisplays();
 
-            yield `Discovered unvisited neighbor <strong>'${neighbor}'</strong> from '${current}':<br>Marked visited (flag = 1), added to queue rear, and highlighted edge (${current}, ${neighbor}).`;
+            yield `Discovered unvisited neighbor <strong>'${neighbor}'</strong> from '${current}':<br>Marked visited (flag = 1), enqueued at rear, and highlighted edge (${current}, ${neighbor}).`;
           }
         }
 
@@ -680,12 +874,12 @@
         }
 
         // Finalize current node
-        setNodeStyle(current, COLORS.VISITED);
+        setNodeState(current, "VISITED");
         updateDisplays();
         yield `Finished processing node <strong>'${current}'</strong>. Marked as fully visited (green).`;
       }
 
-      // Check for disconnected components
+      // Traversal completion
       const allNodes = Object.keys(adjList);
       const unvisited = allNodes.filter(n => !visitedSet.has(n));
       if (unvisited.length > 0) {
