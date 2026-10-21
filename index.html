@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BFS Visualizer — DAA Interactive GUI</title>
+  <style>
+    :root {
+      --bg-color: #f1f5f9;
+      --card-bg: #ffffff;
+      --header-bg: #0f172a;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --secondary: #0d9488;
+      --secondary-hover: #0f766e;
+      --reset-btn: #64748b;
+      --reset-hover: #475569;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      
+      /* Graph node states matching DAA specification */
+      --node-unvisited: #e2e8f0;
+      --node-unvisited-border: #94a3b8;
+      --node-queue: #fbbf24;
+      --node-queue-border: #b45309;
+      --node-current: #ef4444;
+      --node-current-border: #991b1b;
+      --node-visited: #22c55e;
+      --node-visited-border: #166534;
+      --edge-default: #94a3b8;
+      --edge-active: #2563eb;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    header {
+      background-color: var(--header-bg);
+      color: #ffffff;
+      padding: 16px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-title-box h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+    }
+
+    .header-title-box p {
+      color: #94a3b8;
+      font-size: 0.875rem;
+      margin-top: 3px;
+    }
+
+    .header-badge {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #38bdf8;
+      padding: 6px 12px;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .main-container {
+      display: flex;
+      flex: 1;
+      gap: 18px;
+      padding: 18px 24px;
+      max-width: 1440px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* Left Section: Graph Canvas + Legend */
+    .graph-pane {
+      flex: 1 1 60%;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .canvas-card {
+      background: var(--card-bg);
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+      position: relative;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      min-height: 480px;
+    }
+
+    svg#graphSvg {
+      width: 100%;
+      height: 100%;
+      min-height: 480px;
+    }
+
+    .legend-bar {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 0.85rem;
+    }
+
+    .legend-title {
+      font-weight: 600;
+      color: #334155;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 1.5px solid transparent;
+    }
+
+    /* Right Section: Controls & Live State */
+    .controls-pane {
+      flex: 0 0 390px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .panel-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 16px;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+    }
+
+    .panel-card h2 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+    }
+
+    .control-row label {
+      font-weight: 600;
+      color: #334155;
+    }
+
+    select {
+      padding: 6px 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      background: #ffffff;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .speed-slider-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    input[type=range] {
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    .btn-group {
+      display: grid;
+      grid-template-columns: 1.3fr 1.3fr 1fr;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    button {
+      padding: 9px 12px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.15s ease, transform 0.05s;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-run {
+      background: var(--primary);
+      color: #ffffff;
+    }
+    .btn-run:hover:not(:disabled) {
+      background: var(--primary-hover);
+    }
+
+    .btn-step {
+      background: var(--secondary);
+      color: #ffffff;
+    }
+    .btn-step:hover:not(:disabled) {
+      background: var(--secondary-hover);
+    }
+
+    .btn-reset {
+      background: var(--reset-btn);
+      color: #ffffff;
+    }
+    .btn-reset:hover:not(:disabled) {
+      background: var(--reset-hover);
+    }
+
+    .state-field {
+      margin-bottom: 12px;
+    }
+
+    .state-field:last-child {
+      margin-bottom: 0;
+    }
+
+    .state-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 4px;
+    }
+
+    .state-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #0f172a;
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+      word-break: break-all;
+    }
+
+    .order-box {
+      color: #0f766e;
+    }
+
+    .explanation-text {
+      font-size: 0.875rem;
+      line-height: 1.45;
+      color: #334155;
+      background: #f8fafc;
+      border-radius: 6px;
+      padding: 10px 12px;
+      border-left: 3px solid var(--primary);
+      min-height: 75px;
+    }
+
+    .complexity-list {
+      list-style: none;
+      font-size: 0.83rem;
+      color: #334155;
+      line-height: 1.5;
+    }
+
+    .complexity-list li {
+      margin-bottom: 6px;
+    }
+
+    .complexity-list strong {
+      color: #0f172a;
+    }
+
+    /* SVG Graph Elements Styling */
+    .graph-edge {
+      stroke: var(--edge-default);
+      stroke-width: 3;
+      transition: stroke 0.25s ease, stroke-width 0.25s ease;
+    }
+
+    .graph-edge.active {
+      stroke: var(--edge-active);
+      stroke-width: 4.5;
+    }
+
+    .graph-node circle {
+      stroke-width: 2.5;
+      transition: fill 0.3s ease, stroke 0.3s ease;
+    }
+
+    .graph-node text {
+      font-size: 16px;
+      font-weight: 700;
+      text-anchor: middle;
+      dominant-baseline: central;
+      pointer-events: none;
+      user-select: none;
+      transition: fill 0.3s ease;
+    }
+
+    @media (max-width: 960px) {
+      .main-container {
+        flex-direction: column;
+      }
+      .controls-pane {
+        flex: 1 1 auto;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header>
+    <div class="header-title-box">
+      <h1>BFS Visualizer</h1>
+      <p>Breadth-First Search Graph Traversal Animation — DAA Assignment</p>
+    </div>
+    <div class="header-badge">
+      B.Tech CSE — Module 2
+    </div>
+  </header>
+
+  <!-- Main Body Content -->
+  <main class="main-container">
+    
+    <!-- Left Section: Interactive Graph Canvas -->
+    <section class="graph-pane">
+      <div class="canvas-card">
+        <svg id="graphSvg" viewBox="0 0 760 480" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+
+      <!-- Color Legend -->
+      <div class="legend-bar">
+        <span class="legend-title">Color Legend:</span>
+        <div class="legend-item">
+          <span class="legend-dot" style="background: var(--node-unvisited); border-color: var(--node-unvisited-border);"></span>
+          <span>Unvisited</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot" style="background: var(--node-queue); border-color: var(--node-queue-border);"></span>
+          <span>In Queue (Discovered)</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot" style="background: var(--node-current); border-color: var(--node-current-border);"></span>
+          <span>Current Active (Dequeued)</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot" style="background: var(--node-visited); border-color: var(--node-visited-border);"></span>
+          <span>Fully Visited</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Section: Controls & Live Algorithm State -->
+    <aside class="controls-pane">
+      
+      <!-- Card 1: Controls -->
+      <div class="panel-card">
+        <h2>🎮 Traversal Controls</h2>
+        
+        <div class="control-row">
+          <label for="startNodeSelect">Starting Node:</label>
+          <select id="startNodeSelect">
+            <option value="A" selected>A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+            <option value="E">E</option>
+            <option value="F">F</option>
+            <option value="G">G</option>
+            <option value="H">H</option>
+          </select>
+        </div>
+
+        <div class="control-row">
+          <label for="speedRange">Speed:</label>
+          <div class="speed-slider-box">
+            <input type="range" id="speedRange" min="300" max="2000" step="100" value="900">
+            <span id="speedValue" style="font-size: 0.85rem; color: #475569; min-width: 46px;">900ms</span>
+          </div>
+        </div>
+
+        <div class="btn-group">
+          <button id="btnRun" class="btn-run">▶ Run BFS</button>
+          <button id="btnStep" class="btn-step">⏭ Next Step</button>
+          <button id="btnReset" class="btn-reset">↺ Reset</button>
+        </div>
+      </div>
+
+      <!-- Card 2: Live Algorithm Monitor -->
+      <div class="panel-card">
+        <h2>📊 Live Algorithm State</h2>
+        
+        <div class="state-field">
+          <div class="state-label">Current Queue [FIFO]:</div>
+          <div id="queueDisplay" class="state-box">[ Empty ]</div>
+        </div>
+
+        <div class="state-field">
+          <div class="state-label">Traversal Order:</div>
+          <div id="orderDisplay" class="state-box order-box">(None)</div>
+        </div>
+      </div>
+
+      <!-- Card 3: Step Explanation -->
+      <div class="panel-card" style="flex: 1;">
+        <h2>📝 Step Explanation</h2>
+        <div id="stepExplanation" class="explanation-text">
+          Ready. Select a starting node and click <strong>'Run BFS'</strong> for automatic animation or <strong>'Next Step'</strong> to advance step-by-step.
+        </div>
+      </div>
+
+      <!-- Card 4: Complexity Analysis -->
+      <div class="panel-card">
+        <h2>⚡ Complexity Analysis</h2>
+        <ul class="complexity-list">
+          <li><strong>• Time Complexity: O(V + E)</strong><br>
+            Every vertex is queued and dequeued once O(V), and each adjacency edge is inspected once O(E).
+          </li>
+          <li><strong>• Space Complexity: O(V)</strong><br>
+            FIFO queue and visited flags store up to V vertices in memory.
+          </li>
+        </ul>
+      </div>
+
+    </aside>
+
+  </main>
+
+  <!-- Interactive BFS Logic -->
+  <script>
+    // ---------------- Predefined Undirected Graph ----------------
+    // Edges: A-B, A-C, B-D, B-E, C-F, C-G, E-H
+    const adjList = {
+      'A': ['B', 'C'],
+      'B': ['A', 'D', 'E'],
+      'C': ['A', 'F', 'G'],
+      'D': ['B'],
+      'E': ['B', 'H'],
+      'F': ['C'],
+      'G': ['C'],
+      'H': ['E']
+    };
+
+    // Node Positions on Canvas SVG (x, y)
+    const nodePositions = {
+      'A': { x: 380, y: 70 },
+      'B': { x: 230, y: 175 },
+      'C': { x: 530, y: 175 },
+      'D': { x: 140, y: 300 },
+      'E': { x: 320, y: 300 },
+      'F': { x: 450, y: 300 },
+      'G': { x: 620, y: 300 },
+      'H': { x: 320, y: 415 }
+    };
+
+    const nodeRadius = 26;
+
+    // Theme Colors
+    const COLORS = {
+      UNVISITED: { fill: "#E2E8F0", stroke: "#94A3B8", text: "#0F172A" },
+      QUEUE:     { fill: "#FBBF24", stroke: "#B45309", text: "#78350F" },
+      CURRENT:   { fill: "#EF4444", stroke: "#991B1B", text: "#FFFFFF" },
+      VISITED:   { fill: "#22C55E", stroke: "#166534", text: "#FFFFFF" }
+    };
+
+    // State Variables
+    let queue = [];
+    let visitedSet = new Set();
+    let traversalOrder = [];
+    let stepGenerator = null;
+    let isRunning = false;
+    let animTimer = null;
+    let animSpeedMs = 900;
+
+    // DOM Elements
+    const svg = document.getElementById("graphSvg");
+    const startNodeSelect = document.getElementById("startNodeSelect");
+    const speedRange = document.getElementById("speedRange");
+    const speedValue = document.getElementById("speedValue");
+    const btnRun = document.getElementById("btnRun");
+    const btnStep = document.getElementById("btnStep");
+    const btnReset = document.getElementById("btnReset");
+    const queueDisplay = document.getElementById("queueDisplay");
+    const orderDisplay = document.getElementById("orderDisplay");
+    const stepExplanation = document.getElementById("stepExplanation");
+
+    // Map of SVG elements
+    const edgeSvgMap = {};
+    const nodeSvgMap = {};
+
+    function edgeKey(u, v) {
+      return [u, v].sort().join("-");
+    }
+
+    // Initialize SVG Graph Rendering
+    function drawGraph() {
+      svg.innerHTML = "";
+      edgeSvgMap.clear?.();
+      nodeSvgMap.clear?.();
+
+      // 1. Draw Edges
+      const drawnEdges = new Set();
+      for (const u of Object.keys(adjList)) {
+        for (const v of adjList[u]) {
+          const key = edgeKey(u, v);
+          if (!drawnEdges.has(key)) {
+            drawnEdges.add(key);
+            const p1 = nodePositions[u];
+            const p2 = nodePositions[v];
+
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute("x1", p1.x);
+            line.setAttribute("y1", p1.y);
+            line.setAttribute("x2", p2.x);
+            line.setAttribute("y2", p2.y);
+            line.setAttribute("class", "graph-edge");
+            svg.appendChild(line);
+
+            edgeSvgMap[key] = line;
+          }
+        }
+      }
+
+      // 2. Draw Nodes (Circle + Text)
+      for (const [node, pos] of Object.entries(nodePositions)) {
+        const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        group.setAttribute("class", "graph-node");
+
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("cx", pos.x);
+        circle.setAttribute("cy", pos.y);
+        circle.setAttribute("r", nodeRadius);
+        circle.setAttribute("fill", COLORS.UNVISITED.fill);
+        circle.setAttribute("stroke", COLORS.UNVISITED.stroke);
+
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("x", pos.x);
+        text.setAttribute("y", pos.y);
+        text.setAttribute("fill", COLORS.UNVISITED.text);
+        text.textContent = node;
+
+        group.appendChild(circle);
+        group.appendChild(text);
+        svg.appendChild(group);
+
+        nodeSvgMap[node] = { group, circle, text };
+      }
+    }
+
+    function setNodeStyle(node, style) {
+      const nodeEl = nodeSvgMap[node];
+      if (nodeEl) {
+        nodeEl.circle.setAttribute("fill", style.fill);
+        nodeEl.circle.setAttribute("stroke", style.stroke);
+        nodeEl.text.setAttribute("fill", style.text);
+      }
+    }
+
+    function highlightEdge(u, v, active = true) {
+      const line = edgeSvgMap[edgeKey(u, v)];
+      if (line) {
+        if (active) {
+          line.classList.add("active");
+        } else {
+          line.classList.remove("active");
+        }
+      }
+    }
+
+    function updateDisplays() {
+      if (queue.length > 0) {
+        queueDisplay.textContent = "Front -> [ " + queue.join(", ") + " ] <- Rear";
+      } else {
+        queueDisplay.textContent = "[ Empty ]";
+      }
+
+      if (traversalOrder.length > 0) {
+        orderDisplay.textContent = traversalOrder.join(" → ");
+      } else {
+        orderDisplay.textContent = "(None)";
+      }
+    }
+
+    function updateExplanation(html) {
+      stepExplanation.innerHTML = html;
+    }
+
+    // ---------------- BFS Step Generator ----------------
+    function* bfsGenerator(startNode) {
+      // Step 1: Initialize start node
+      visitedSet.add(startNode);
+      queue.push(startNode);
+      setNodeStyle(startNode, COLORS.QUEUE);
+      updateDisplays();
+
+      yield `<strong>Step 1:</strong> Enqueue start node <strong>'${startNode}'</strong> and set its visited flag = 1.<br>Queue now contains: [${startNode}].`;
+
+      // Step 2: Main BFS Queue processing loop
+      while (queue.length > 0) {
+        const current = queue.shift();
+        traversalOrder.push(current);
+        setNodeStyle(current, COLORS.CURRENT);
+        updateDisplays();
+
+        yield `<strong>Processing Node '${current}':</strong> Dequeued from front of queue.<br>Added '${current}' to traversal output order.<br>Checking adjacent vertices: <code>[${adjList[current].join(", ")}]</code>.`;
+
+        const neighbors = adjList[current] || [];
+        let discoveredAny = false;
+
+        for (const neighbor of neighbors) {
+          if (!visitedSet.has(neighbor)) {
+            discoveredAny = true;
+            visitedSet.add(neighbor);
+            queue.push(neighbor);
+            highlightEdge(current, neighbor, true);
+            setNodeStyle(neighbor, COLORS.QUEUE);
+            updateDisplays();
+
+            yield `Discovered unvisited neighbor <strong>'${neighbor}'</strong> from '${current}':<br>Marked visited (flag = 1), added to queue rear, and highlighted edge (${current}, ${neighbor}).`;
+          }
+        }
+
+        if (!discoveredAny) {
+          yield `Node <strong>'${current}'</strong> has no remaining unvisited neighbors to enqueue.`;
+        }
+
+        // Finalize current node
+        setNodeStyle(current, COLORS.VISITED);
+        updateDisplays();
+        yield `Finished processing node <strong>'${current}'</strong>. Marked as fully visited (green).`;
+      }
+
+      // Check for disconnected components
+      const allNodes = Object.keys(adjList);
+      const unvisited = allNodes.filter(n => !visitedSet.has(n));
+      if (unvisited.length > 0) {
+        yield `<strong>BFS Traversal Complete for connected component!</strong><br>Disconnected/Unreachable vertices: <code>${unvisited.join(", ")}</code>.`;
+      } else {
+        yield `<strong>🎉 BFS Traversal Complete!</strong><br>All 8 nodes successfully visited.<br>Final Order: <strong>${traversalOrder.join(" → ")}</strong>`;
+      }
+    }
+
+    // Step Execution
+    function stepBFS() {
+      if (!stepGenerator) {
+        const start = startNodeSelect.value;
+        startNodeSelect.disabled = true;
+        stepGenerator = bfsGenerator(start);
+      }
+
+      const res = stepGenerator.next();
+      if (!res.done) {
+        updateExplanation(res.value);
+        return true;
+      } else {
+        stopAnimation();
+        btnRun.textContent = "▶ Run BFS";
+        btnRun.disabled = true;
+        btnStep.disabled = true;
+        return false;
+      }
+    }
+
+    // Auto Run Loop
+    function autoStep() {
+      if (!isRunning) return;
+      const hasNext = stepBFS();
+      if (hasNext) {
+        animTimer = setTimeout(autoStep, animSpeedMs);
+      } else {
+        isRunning = false;
+      }
+    }
+
+    function runBFS() {
+      if (isRunning) {
+        stopAnimation();
+        btnRun.textContent = "▶ Resume BFS";
+        return;
+      }
+
+      isRunning = true;
+      btnRun.textContent = "⏸ Pause BFS";
+      autoStep();
+    }
+
+    function stopAnimation() {
+      isRunning = false;
+      if (animTimer) {
+        clearTimeout(animTimer);
+        animTimer = null;
+      }
+    }
+
+    function resetGraph() {
+      stopAnimation();
+      queue = [];
+      visitedSet.clear();
+      traversalOrder = [];
+      stepGenerator = null;
+
+      startNodeSelect.disabled = false;
+      btnRun.textContent = "▶ Run BFS";
+      btnRun.disabled = false;
+      btnStep.disabled = false;
+
+      drawGraph();
+      updateDisplays();
+
+      const start = startNodeSelect.value;
+      updateExplanation(`Graph reset. Start node set to <strong>'${start}'</strong>.<br>Click <strong>'Run BFS'</strong> for automatic animation or <strong>'Next Step'</strong> to advance step-by-step.`);
+    }
+
+    // Event Listeners
+    btnRun.addEventListener("click", runBFS);
+    btnStep.addEventListener("click", stepBFS);
+    btnReset.addEventListener("click", resetGraph);
+
+    startNodeSelect.addEventListener("change", () => {
+      resetGraph();
+    });
+
+    speedRange.addEventListener("input", (e) => {
+      animSpeedMs = parseInt(e.target.value);
+      speedValue.textContent = `${animSpeedMs}ms`;
+    });
+
+    // Initial render
+    drawGraph();
+    resetGraph();
+  </script>
+
+</body>
+</html>
